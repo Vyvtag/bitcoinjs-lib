@@ -1044,6 +1044,11 @@ function getSigningData(
   }
   // ready to sign
   let signatureHash;
+  if (network.messagePrefix == '\x18VERGE Signed Message:\n') {
+    tx.setVerge(true)
+  } else {
+    tx.setVerge(false)
+  }
   if (input.hasWitness) {
     signatureHash = tx.hashForWitnessV0(
       vin,

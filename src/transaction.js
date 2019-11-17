@@ -43,8 +43,13 @@ class Transaction {
   constructor() {
     this.version = 1;
     this.locktime = 0;
+    this.time = Math.round(new Date().getTime() / 1000);
+    this._IS_VERGE = false;
     this.ins = [];
     this.outs = [];
+  }
+  setVerge(_val) {
+    this._IS_VERGE = _val;
   }
   static fromBuffer(buffer, _NO_STRICT) {
     let offset = 0;
@@ -193,6 +198,7 @@ class Transaction {
     const newTx = new Transaction();
     newTx.version = this.version;
     newTx.locktime = this.locktime;
+    newTx._IS_VERGE = this._IS_VERGE;
     newTx.ins = this.ins.map(txIn => {
       return {
         hash: txIn.hash,
@@ -390,6 +396,7 @@ class Transaction {
     const hasWitnesses = _ALLOW_WITNESS && this.hasWitnesses();
     return (
       (hasWitnesses ? 10 : 8) +
+      (this._IS_VERGE ? 4 : 0) +
       varuint.encodingLength(this.ins.length) +
       varuint.encodingLength(this.outs.length) +
       this.ins.reduce((sum, input) => {
@@ -436,6 +443,9 @@ class Transaction {
       vector.forEach(writeVarSlice);
     }
     writeInt32(this.version);
+    if (this._IS_VERGE) {
+      writeInt32(this.time);
+    }
     const hasWitnesses = _ALLOW_WITNESS && this.hasWitnesses();
     if (hasWitnesses) {
       writeUInt8(Transaction.ADVANCED_TRANSACTION_MARKER);

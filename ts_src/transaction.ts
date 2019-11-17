@@ -184,9 +184,16 @@ export class Transaction {
 
   version: number = 1;
   locktime: number = 0;
+  time: number = Math.round(new Date().getTime() / 1000);
+  _IS_VERGE: any = false;
   ins: Input[] = [];
   outs: OpenOutput[] = [];
 
+  setVerge(
+    _val?: any,
+  ): void {
+    this._IS_VERGE = _val;
+  }
   isCoinbase(): boolean {
     return (
       this.ins.length === 1 && Transaction.isCoinbaseHash(this.ins[0].hash)
@@ -515,9 +522,9 @@ export class Transaction {
 
   private __byteLength(_ALLOW_WITNESS: boolean): number {
     const hasWitnesses = _ALLOW_WITNESS && this.hasWitnesses();
-
     return (
       (hasWitnesses ? 10 : 8) +
+      (this._IS_VERGE ? 4 : 0) +
       varuint.encodingLength(this.ins.length) +
       varuint.encodingLength(this.outs.length) +
       this.ins.reduce((sum, input) => {
@@ -537,7 +544,7 @@ export class Transaction {
   private __toBuffer(
     buffer?: Buffer,
     initialOffset?: number,
-    _ALLOW_WITNESS?: boolean,
+    _ALLOW_WITNESS?: boolean
   ): Buffer {
     if (!buffer)
       buffer = Buffer.allocUnsafe(this.__byteLength(_ALLOW_WITNESS!)) as Buffer;
@@ -580,6 +587,9 @@ export class Transaction {
     }
 
     writeInt32(this.version);
+    if (this._IS_VERGE) {
+      writeInt32(this.time);
+    }
 
     const hasWitnesses = _ALLOW_WITNESS && this.hasWitnesses();
 
