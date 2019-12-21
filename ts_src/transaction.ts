@@ -74,6 +74,10 @@ export class Transaction {
   static readonly ADVANCED_TRANSACTION_MARKER = 0x00;
   static readonly ADVANCED_TRANSACTION_FLAG = 0x01;
 
+  static readonly SIGHASH_BITCOINCASHBIP143 = 0x40
+  static readonly FORKID_BTG = 0x4F // 79
+  static readonly FORKID_BCH = 0x00
+
   static fromBuffer(buffer: Buffer, _NO_STRICT?: boolean): Transaction {
     let offset: number = 0;
 
@@ -186,14 +190,22 @@ export class Transaction {
   locktime: number = 0;
   time: number = Math.round(new Date().getTime() / 1000);
   _IS_VERGE: any = false;
+  _IS_BTC_FORK: any = false;
   ins: Input[] = [];
   outs: OpenOutput[] = [];
 
   setVerge(
-    _val?: any,
+      _val?: any,
   ): void {
     this._IS_VERGE = _val;
   }
+
+  setBTCFork(
+      _val?: any,
+  ): void {
+    this._IS_BTC_FORK = _val;
+  }
+
   isCoinbase(): boolean {
     return (
       this.ins.length === 1 && Transaction.isCoinbaseHash(this.ins[0].hash)

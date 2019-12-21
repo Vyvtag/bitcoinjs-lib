@@ -45,11 +45,15 @@ class Transaction {
     this.locktime = 0;
     this.time = Math.round(new Date().getTime() / 1000);
     this._IS_VERGE = false;
+    this._IS_BTC_FORK = false;
     this.ins = [];
     this.outs = [];
   }
   setVerge(_val) {
     this._IS_VERGE = _val;
+  }
+  setBTCFork(_val) {
+    this._IS_BTC_FORK = _val;
   }
   static fromBuffer(buffer, _NO_STRICT) {
     let offset = 0;
@@ -485,4 +489,57 @@ Transaction.SIGHASH_SINGLE = 0x03;
 Transaction.SIGHASH_ANYONECANPAY = 0x80;
 Transaction.ADVANCED_TRANSACTION_MARKER = 0x00;
 Transaction.ADVANCED_TRANSACTION_FLAG = 0x01;
+
+Transaction.SIGHASH_BITCOINCASHBIP143 = 0x40
+Transaction.FORKID_BTG = 0x4F // 79
+Transaction.FORKID_BCH = 0x00
+
+/**
+ * Hash transaction for signing a specific input for Bitcoin Cash.
+ */
+Transaction.prototype.hashForCashSignature = function (inIndex, prevOutScript, inAmount, hashType) {
+  // This function works the way it does because Bitcoin Cash
+  // uses BIP143 as their replay protection, AND their algo
+  // includes `forkId | hashType`, AND since their forkId=0,
+  // this is a NOP, and has no difference to segwit. To support
+  // other forks, another parameter is required, and a new parameter
+  // would be required in the hashForWitnessV0 function, or
+  // it could be broken into two..
+
+  // BIP143 sighash activated in BitcoinCash via 0x40 bit
+  if (hashType & Transaction.SIGHASH_BITCOINCASHBIP143) {
+    if (types.Null(inAmount)) {
+      throw new Error('Bitcoin Cash sighash requires value of input to be signed.')
+    }
+    return this.hashForWitnessV0(inIndex, prevOutScript, inAmount, hashType)
+  } else {
+    return this.hashForSignature(inIndex, prevOutScript, hashType)
+  }
+}
+
+/**
+ * Hash transaction for signing a specific input for Bitcoin Gold.
+ */
+Transaction.prototype.hashForGoldSignature = function (inIndex, prevOutScript, inAmount, hashType, sigVersion) {
+  // Bitcoin Gold also implements segregated witness
+  // therefore we can pull out the setting of nForkHashType
+  // and pass it into the functions.
+
+  var nForkHashType = hashType
+  var fUseForkId = (hashType & Transaction.SIGHASH_BITCOINCASHBIP143) > 0
+  if (fUseForkId) {
+    nForkHashType |= Transaction.FORKID_BTG << 8
+  }
+
+  // BIP143 sighash activated in BitcoinCash via 0x40 bit
+  if (sigVersion || fUseForkId) {
+    if (types.Null(inAmount)) {
+      throw new Error('Bitcoin Cash sighash requires value of input to be signed.')
+    }
+    return this.hashForWitnessV0(inIndex, prevOutScript, inAmount, nForkHashType)
+  } else {
+    return this.hashForSignature(inIndex, prevOutScript, nForkHashType)
+  }
+}
+
 exports.Transaction = Transaction;

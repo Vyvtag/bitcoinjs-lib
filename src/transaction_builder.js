@@ -1046,8 +1046,13 @@ function getSigningData(
   let signatureHash;
   if (network.messagePrefix == '\x18VERGE Signed Message:\n') {
     tx.setVerge(true)
+    tx.setBTCFork(false)
+  } else if (typeof network.BTCFork !== 'undefined') {
+    tx.setBTCFork(network.BTCFork)
+    tx.setVerge(false)
   } else {
     tx.setVerge(false)
+    tx.setBTCFork(false)
   }
   if (input.hasWitness) {
     signatureHash = tx.hashForWitnessV0(
@@ -1056,7 +1061,13 @@ function getSigningData(
       input.value,
       hashType,
     );
-  } else {
+  } else if (tx._IS_BTC_FORK === 'BTG') {
+    hashType = 0x01 | 0x40 // Transaction.SIGHASH_ALL | Transaction.SIGHASH_BITCOINCASHBIP143
+    signatureHash = tx.hashForGoldSignature(vin, input.signScript, witnessValue, hashType, input.witness)
+  } else if (tx._IS_BTC_FORK === 'BCH') {
+    hashType = 0x01 | 0x40 // Transaction.SIGHASH_ALL | Transaction.SIGHASH_BITCOINCASHBIP143
+    signatureHash = tx.hashForCashSignature(vin, input.signScript, witnessValue, hashType)
+  }else {
     signatureHash = tx.hashForSignature(vin, input.signScript, hashType);
   }
   return {
