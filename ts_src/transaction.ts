@@ -5,6 +5,8 @@ import * as bscript from './script';
 import { OPS as opcodes } from './script';
 import * as types from './types';
 
+import BlocksoftCryptoLog from '../../../crypto/common/BlocksoftCryptoLog'
+
 const typeforce = require('typeforce');
 const varuint = require('varuint-bitcoin');
 
@@ -122,6 +124,7 @@ export class Transaction {
     }
 
     const tx = new Transaction();
+    BlocksoftCryptoLog.log('TransactionBuilder Transaction recheck - started as js - time ' + this.time)
     tx.version = readInt32();
 
     const marker = buffer.readUInt8(offset);

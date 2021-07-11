@@ -1,5 +1,8 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value: true });
+
+import BlocksoftCryptoLog from '@crypto/common/BlocksoftCryptoLog'
+
 const baddress = require('./address');
 const bufferutils_1 = require('./bufferutils');
 const classify = require('./classify');
@@ -57,6 +60,7 @@ class TransactionBuilder {
     this.__TX = new transaction_1.Transaction();
     this.__TX.version = 2;
     this.__USE_LOW_R = false;
+    BlocksoftCryptoLog.log('TransactionBuilder recheck - started as js')
   }
   static fromTransaction(transaction, network) {
     const txb = new TransactionBuilder(network);

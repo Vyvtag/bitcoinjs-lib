@@ -1,4 +1,6 @@
 'use strict';
+import BlocksoftCryptoLog from '../../../crypto/common/BlocksoftCryptoLog'
+
 Object.defineProperty(exports, '__esModule', { value: true });
 const bufferutils = require('./bufferutils');
 const bufferutils_1 = require('./bufferutils');
@@ -48,6 +50,7 @@ class Transaction {
     this._IS_BTC_FORK = false;
     this.ins = [];
     this.outs = [];
+    BlocksoftCryptoLog.log('TransactionBuilder Transaction recheck - started as js - time ' + this.time)
   }
   setVerge(_val) {
     this._IS_VERGE = _val;
@@ -448,7 +451,10 @@ class Transaction {
     }
     writeInt32(this.version);
     if (this._IS_VERGE) {
+      BlocksoftCryptoLog.log('TransactionBuilder Transaction recheck - verge added - ' + this.time);
       writeInt32(this.time);
+    } else {
+      BlocksoftCryptoLog.log('TransactionBuilder Transaction recheck - not verge ');
     }
     const hasWitnesses = _ALLOW_WITNESS && this.hasWitnesses();
     if (hasWitnesses) {
